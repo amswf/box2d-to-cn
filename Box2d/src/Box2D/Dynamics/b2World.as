@@ -421,7 +421,6 @@ public class b2World
 			
 		m_controllerCount--;
 	}
-	
 	/**
 	 * 创建控制器 
 	 * @param controller
@@ -757,7 +756,6 @@ public class b2World
 		shape.ComputeAABB(aabb, transform);
 		broadPhase.Query(WorldQueryWrapper, aabb);
 	}
-	
 	/**
 	 * 查询某一点中包含的物体
 	 * @param callback 回调函数，实现如下：
