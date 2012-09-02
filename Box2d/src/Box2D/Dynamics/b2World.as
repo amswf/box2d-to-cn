@@ -233,7 +233,6 @@ public class b2World
 		//m_blockAllocator.Free(b, sizeof(b2Body));
 		
 	}
-
 	/**
 	 * 创建连接器
 	 * <p>连接器可以将多个刚体链接到一起。不同的连接器，会使刚体链接的效果不同。
@@ -477,14 +476,13 @@ public class b2World
 	}
 	/**
 	 * 获取关节数量
-	* Get the number of joints.
 	*/
 	public function GetJointCount() : int
 	{
 		return m_jointCount;
 	}
 	/**
-	* Get the number of contacts (each may have 0 or more contact points).
+	* 获取接触数量
 	*/
 	public function GetContactCount() : int
 	{
@@ -508,8 +506,6 @@ public class b2World
 	}
 	/**
 	 * 获取地面体
-	* The world provides a single static ground body with no collision shapes.
-	* You can use this to simplify the creation of joints and static shapes.
 	*/
 	public function GetGroundBody() : b2Body{
 		return m_groundBody;
@@ -519,7 +515,7 @@ public class b2World
 	/**
 	 * 时间步
 	 * <p>调用该方法世界才开始模拟。
-	* @param timeStep 时间步，相当于flash帧的概念，为帧的倒数。
+	* @param timeStep 时间步，相当于flash帧的概念，为帧的倒数。该数值越小世界看起来越真实，但是会降低效率，建议使用1\60
 	* @param velocityIterations for the velocity constraint solver.
 	* @param positionIterations for the position constraint solver.
 	*/
@@ -573,8 +569,6 @@ public class b2World
 	
 	/**
 	 * 清除力，该方法在设置时间步后调用
-	 * Call this after you are done with time steps to clear the forces. You normally
-	 * call this after each call to Step, unless you are performing sub-steps.
 	 */
 	public function ClearForces() : void
 	{
@@ -588,7 +582,6 @@ public class b2World
 	static private var s_xf:b2Transform = new b2Transform();
 	/**
 	 * 画测试图形
-	 * Call this to draw shapes and other debug draw data.
 	 */
 	public function DrawDebugData() : void{
 		
@@ -724,13 +717,10 @@ public class b2World
 	}
 
 	/**
-	 * 检测包围盒所在区域的物体。
-	 * Query the world for all fixtures that potentially overlap the
-	 * provided AABB.
-	 * @param callback a user implemented callback class. It should match signature
+	 * 检测指定区域中的物体。
+	 * @param callback 回调函数，实现如下：
 	 * <code>function Callback(fixture:b2Fixture):Boolean</code>
-	 * Return true to continue to the next fixture.
-	 * @param aabb the query box.
+	 * @param aabb 想要查询的区域
 	 */
 	public function QueryAABB(callback:Function, aabb:b2AABB):void
 	{
@@ -742,13 +732,11 @@ public class b2World
 		broadPhase.Query(WorldQueryWrapper, aabb);
 	}
 	/**
-	 * 检测物体是否重叠
-	 * Query the world for all fixtures that precisely overlap the
-	 * provided transformed shape.
-	 * @param callback a user implemented callback class. It should match signature
+	 * 检测和指定物体重叠的物体，实现如下：
 	 * <code>function Callback(fixture:b2Fixture):Boolean</code>
-	 * Return true to continue to the next fixture.
-	 * @asonly
+	 * @param callback 回调函数 
+	 * @param shape 待查询的图形
+	 * @param transform
 	 */
 	public function QueryShape(callback:Function, shape:b2Shape, transform:b2Transform = null):void
 	{
@@ -771,11 +759,10 @@ public class b2World
 	}
 	
 	/**
-	 * 检测物体是否包含要检测的点
-	 * Query the world for all fixtures that contain a point.
-	 * @param callback a user implemented callback class. It should match signature
+	 * 查询某一点中包含的物体
+	 * @param callback 回调函数，实现如下：
 	 * <code>function Callback(fixture:b2Fixture):Boolean</code>
-	 * Return true to continue to the next fixture.
+	 * @param p 待查询的点
 	 * @asonly
 	 */
 	public function QueryPoint(callback:Function, p:b2Vec2):void
@@ -794,25 +781,22 @@ public class b2World
 		aabb.upperBound.Set(p.x + b2Settings.b2_linearSlop, p.y + b2Settings.b2_linearSlop);
 		broadPhase.Query(WorldQueryWrapper, aabb);
 	}
-	
 	/**
 	 * 进行光线投射，并获取投射交叉点。
-	 * Ray-cast the world for all fixtures in the path of the ray. Your callback
-	 * Controls whether you get the closest point, any point, or n-points
-	 * The ray-cast ignores shapes that contain the starting point
-	 * @param callback A callback function which must be of signature:
-	 * <code>function Callback(fixture:b2Fixture,    // The fixture hit by the ray
-	 * point:b2Vec2,         // The point of initial intersection
+	 * <p>该方法会投射光线中所包含的所有物体
+	 * <p>回调函数可以得到交点，
+	 * <p>投射会忽略包含起始点的物体
+	 * @param callback 回调函数，实现如下:
+	 * <code>function Callback(fixture:b2Fixture,    // 光线投射到的物体
+	 * point:b2Vec2,         // 交叉点
 	 * normal:b2Vec2,        // The normal vector at the point of intersection
-	 * fraction:Number       // The fractional length along the ray of the intersection
+	 * fraction:Number       // 沿着射线通过的距离
 	 * ):Number
 	 * </code>
-	 * Callback should return the new length of the ray as a fraction of the original length.
-	 * By returning 0, you immediately terminate.
-	 * By returning 1, you continue wiht the original ray.
-	 * By returning the current fraction, you proceed to find the closest point.
-	 * @param point1 the ray starting point
-	 * @param point2 the ray ending point
+	 * 返回fraction为零代表光线投射应该终止
+	 * 返回fraction为一，光线好像没有发生碰撞一样一直延伸
+	 * @param point1 光线起始点
+	 * @param point2 光线结束点
 	 */
 	public function RayCast(callback:Function, point1:b2Vec2, point2:b2Vec2):void
 	{
@@ -836,7 +820,13 @@ public class b2World
 		var input:b2RayCastInput = new b2RayCastInput(point1, point2);
 		broadPhase.RayCast(RayCastWrapper, input);
 	}
-	
+	/**
+	 * 获取光线中的某个物体 
+	 * @param point1
+	 * @param point2
+	 * @return 
+	 * 
+	 */	
 	public function RayCastOne(point1:b2Vec2, point2:b2Vec2):b2Fixture
 	{
 		var result:b2Fixture;
@@ -848,7 +838,13 @@ public class b2World
 		RayCast(RayCastOneWrapper, point1, point2);
 		return result;
 	}
-	
+	/**
+	 * 获取光线中的所有物体 
+	 * @param point1
+	 * @param point2
+	 * @return 
+	 * 
+	 */	
 	public function RayCastAll(point1:b2Vec2, point2:b2Vec2):Vector.<b2Fixture>
 	{
 		var result:Vector.<b2Fixture> = new Vector.<b2Fixture>();
@@ -860,47 +856,37 @@ public class b2World
 		RayCast(RayCastAllWrapper, point1, point2);
 		return result;
 	}
-
 	/**
-	 * 获取刚体列表
-	* Get the world body list. With the returned body, use b2Body::GetNext to get
-	* the next body in the world list. A NULL body indicates the end of the list.
-	* @return the head of the world body list.
+	 * 获取世界中最上面的刚体，得到最上面刚体后，可以调用刚体的b2Body::GetNext获得下面的刚体
+	* @return 返回世界中最上面的刚体
 	*/
 	public function GetBodyList() : b2Body{
 		return m_bodyList;
 	}
-
 	/**
-	 * 获取关节列表
-	* Get the world joint list. With the returned joint, use b2Joint::GetNext to get
-	* the next joint in the world list. A NULL joint indicates the end of the list.
-	* @return the head of the world joint list.
+	 * 获取最上面的关节
+	 * <p>如果想获得下面的关节，可以调用b2Joint::GetNext，最后一个关节该方法将返回null
+	* @return 返回最上面的关节
 	*/
 	public function GetJointList() : b2Joint{
 		return m_jointList;
 	}
-
 	/**
-	 * 获取接触列表
-	 * Get the world contact list. With the returned contact, use b2Contact::GetNext to get
-	 * the next contact in the world list. A NULL contact indicates the end of the list.
-	 * @return the head of the world contact list.
-	 * @warning contacts are 
+	 * 获取接触
+	 * <p>获取下一接触调用b2Contact::GetNext
+	 * @return 返回首个接触
 	 */
 	public function GetContactList():b2Contact
 	{
 		return m_contactList;
 	}
-	
 	/**
-	 * Is the world locked (in the middle of a time step).
+	 * 在time step阶段，世界是否锁定。
 	 */
 	public function IsLocked():Boolean
 	{
 		return (m_flags & e_locked) > 0;
 	}
-
 	//--------------- Internals Below -------------------
 	// Internal yet public to make life easier.
 
